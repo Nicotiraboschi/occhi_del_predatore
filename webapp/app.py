@@ -2,33 +2,13 @@
 from flask import Flask, render_template, request, jsonify, session
 import os
 import chess
-import chess.pgn
 import random
 
 app = Flask(__name__)
 app.secret_key = 'supersecretkey'  # Cambia in produzione
 
 PIECES_DIR = 'static/pieces'
-
 GAMES_DIR = 'games'
-PGN_PATH = None
-for file in os.listdir(GAMES_DIR):
-    if file.endswith('.pgn'):
-        PGN_PATH = os.path.join(GAMES_DIR, file)
-        break
-
-def get_random_game(pgn_path):
-    chosen = None
-    count = 0
-    with open(pgn_path, encoding="utf-8") as pgn:
-        while True:
-            game = chess.pgn.read_game(pgn)
-            if game is None:
-                break
-            count += 1
-            if random.randint(1, count) == 1:
-                chosen = game
-    return chosen
 
 def get_random_board():
     fen_file = os.path.join(GAMES_DIR, "positions_5captures.txt")
@@ -135,4 +115,5 @@ def done():
     return jsonify({'banner': banner})
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
