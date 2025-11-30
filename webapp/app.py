@@ -11,7 +11,8 @@ PIECES_DIR = 'static/pieces'
 GAMES_DIR = 'games'
 
 def get_random_board():
-    fen_file = os.path.join(GAMES_DIR, "positions_5captures.txt")
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    fen_file = os.path.join(base_dir, "games", "positions_5captures.txt")
     if not os.path.exists(fen_file):
         return chess.Board()
     with open(fen_file, encoding="utf-8") as f:
