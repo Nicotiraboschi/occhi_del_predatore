@@ -163,7 +163,7 @@ function drawArrow(from, to, color) {
     if (color === 'w') arrowColor = 'rgb(255,255,255)';
     if (color === 'b') arrowColor = 'rgb(130,0,0)';
     path.setAttribute('stroke', arrowColor);
-    path.setAttribute('stroke-width', '14');
+    path.setAttribute('stroke-width', '7');
     path.setAttribute('opacity', '0.98');
     path.setAttribute('fill', 'none');
     path.setAttribute('stroke-linecap', 'round');
@@ -175,10 +175,10 @@ function drawArrow(from, to, color) {
     const head = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     head.setAttribute('cx', x2);
     head.setAttribute('cy', y2);
-    head.setAttribute('r', '13');
+    head.setAttribute('r', '7');
     head.setAttribute('fill', arrowColor);
     head.setAttribute('stroke', '#222');
-    head.setAttribute('stroke-width', '5');
+    head.setAttribute('stroke-width', '2.5');
     head.setAttribute('filter', 'drop-shadow(0 0 8px #222)');
     svg.appendChild(head);
 }
