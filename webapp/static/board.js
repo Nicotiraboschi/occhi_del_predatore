@@ -58,10 +58,35 @@ async function loadBoard() {
                 document.addEventListener('mouseup', endDrag);
             });
 
+            div.addEventListener('touchstart', (e) => {
+                if (!data.pieces[sq]) return;
+                e.preventDefault();
+                dragPiece = data.pieces[sq];
+                dragOrigin = sq;
+                dragImg = document.createElement('img');
+                dragImg.src = `/static/pieces/${dragPiece}.png`;
+                dragImg.style.position = 'fixed';
+                dragImg.style.pointerEvents = 'none';
+                dragImg.style.zIndex = 9999;
+                dragImg.style.width = '60px';
+                dragImg.style.height = '60px';
+                document.body.appendChild(dragImg);
+                moveDragImg(e.touches[0]);
+                document.addEventListener('touchmove', moveDragTouch, {passive:false});
+                document.addEventListener('touchend', endDragTouch);
+            });
+
             function moveDragImg(e) {
                 if (dragImg) {
                     dragImg.style.left = (e.clientX - 30) + 'px';
                     dragImg.style.top = (e.clientY - 30) + 'px';
+                }
+            }
+
+            function moveDragTouch(e) {
+                if (dragImg && e.touches && e.touches[0]) {
+                    dragImg.style.left = (e.touches[0].clientX - 30) + 'px';
+                    dragImg.style.top = (e.touches[0].clientY - 30) + 'px';
                 }
             }
 
@@ -97,6 +122,40 @@ async function loadBoard() {
                 dragImg = null;
             }
 
+            function endDragTouch(e) {
+                if (!dragImg) return;
+                dragImg.remove();
+                document.removeEventListener('touchmove', moveDragTouch);
+                document.removeEventListener('touchend', endDragTouch);
+                // Trova la casella sotto il dito
+                const touch = (e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0] : null;
+                if (touch) {
+                    const elem = document.elementFromPoint(touch.clientX, touch.clientY);
+                    if (elem && elem.classList.contains('square')) {
+                        const toSq = elem.id;
+                        if (dragOrigin && toSq && dragOrigin !== toSq) {
+                            fetch('/move', {
+                                method: 'POST',
+                                headers: {'Content-Type': 'application/json'},
+                                body: JSON.stringify({from: dragOrigin, to: toSq})
+                            })
+                            .then(res => res.json())
+                            .then(data => {
+                                selected = null;
+                                if (raceMode && data.success) {
+                                    totalCaptures++;
+                                    aggiornaCaptureCounter();
+                                }
+                                loadBoard();
+                            });
+                        }
+                    }
+                }
+                dragPiece = null;
+                dragOrigin = null;
+                dragImg = null;
+            }
+
             const handleSelect = (ev) => {
                 ev.preventDefault();
                 selectSquare(sq);
@@ -104,9 +163,6 @@ async function loadBoard() {
 
             // click desktop
             div.addEventListener('click', handleSelect);
-
-            // tap mobile
-            div.addEventListener('touchstart', handleSelect, { passive: false });
 
             // Mostra pezzo se presente
             if (data.pieces[sq]) {
