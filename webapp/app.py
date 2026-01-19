@@ -119,27 +119,25 @@ def done():
         session['found_captures'] = []
         next_captures = [fc for fc in all_captures if fc[2] == next_color]
         if len(next_captures) == 0:
-            # Se anche il colore opposto non ha catture, termina subito la posizione
-            if session.get('white_completed', False) or session.get('black_completed', False):
-                session['white_completed'] = False
-                session['black_completed'] = False
-                banner = "Bravo! Hai trovato tutte le catture! Nuova posizione!"
-                return jsonify({'banner': banner, 'arrows': [], 'step_completed': True})
             banner += f"\nIl colore opposto non ha catture! Premi di nuovo 'Fatto' per cambiare posizione."
         return jsonify({'banner': banner, 'arrows': [], 'step_completed': False})
     elif not valid_captures:
-        # Se non ci sono catture per il colore attuale, controlla se la posizione è già completata
-        if session.get('white_completed', False) or session.get('black_completed', False):
-            session['white_completed'] = False
-            session['black_completed'] = False
-            banner = "Bravo! Hai trovato tutte le catture! Nuova posizione!"
-            return jsonify({'banner': banner, 'arrows': [], 'step_completed': True})
         banner = "Il colore attuale non ha catture!"
         return jsonify({'banner': banner, 'step_completed': False})
     else:
         banner = "Ti sei perso qualcosa!"
         return jsonify({'banner': banner, 'arrows': found, 'step_completed': False})
 
+@app.route('/next_position', methods=['POST'])
+def next_position():
+    # DEBUG: termina la sfida dopo 1 esercizio
+    session['challenge_count'] = session.get('challenge_count', 0) + 1
+    if session['challenge_count'] >= 1:  # invece di 10
+        session['challenge_count'] = 0
+        return jsonify({'challenge_completed': True})
+    # ...existing code...
+    return jsonify({'challenge_completed': False})
+
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=port, debug=True)

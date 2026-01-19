@@ -116,8 +116,8 @@
         @media (max-width: 600px) {
 
             body {
-                justify-content: flex-start;
-                padding-top: 12px;
+                justify-content: center;
+                padding-top: 38px;
             }
 
             h1 {
@@ -170,36 +170,53 @@
                 object-fit: contain;
             }
 
+            .btn-row {
+                display: flex;
+                flex-direction: row;
+                gap: 8px;
+                align-items: center;
+                justify-content: center;
+                margin-bottom: 8px;
+            }
+
+            #timer-div {
+                display: block !important;
+                width: 100%;
+                text-align: center;
+                margin-bottom: 8px;
+                font-size: 1.1em;
+            }
         }
     </style>
 </head>
 
 <body>
-    <div style="display:flex;gap:14px;align-items:center;">
-            <button id="race10btn" style="margin-bottom:12px;background:linear-gradient(90deg,#ff3c00,#c40000);color:#fff;box-shadow:0 0 10px #c40000;font-size:1.25em;padding:13px 30px;border-radius:18px;border:none;letter-spacing:1px;font-family:'Segoe UI',Arial,sans-serif;font-weight:bold;transition:background 0.2s;">🏁 Corsa ai 10</button>
-            <button id="donebtn" class="donebtn-blue" style="margin-bottom:12px;font-size:1.25em;padding:13px 30px;border-radius:18px;border:none;letter-spacing:1px;font-family:'Segoe UI',Arial,sans-serif;font-weight:bold;transition:background 0.2s;">Fatto</button>
-            <button id="capture-btn" style="margin-bottom:12px;font-size:1.1em;padding:13px 18px;border-radius:18px;border:none;background:linear-gradient(90deg,#ffe066,#ffd700);color:#222;font-weight:bold;min-width:44px;display:none;cursor:default;">0</button>
-            <button id="error-btn" style="margin-bottom:12px;font-size:1.1em;padding:13px 18px;border-radius:18px;border:none;background:linear-gradient(90deg,#ff6666,#ff2222);color:#fff;font-weight:bold;min-width:44px;display:none;cursor:default;">0</button>
-            <button id="endbtn" style="margin-bottom:12px;font-size:1.1em;padding:13px 22px;border-radius:18px;border:none;background:linear-gradient(90deg,#222,#444);color:#fff;font-weight:bold;display:none;">Fine</button>
-            <style>
-            .donebtn-blue {
-                background: linear-gradient(90deg,#0074d9,#005fa3);
-                color: #fff;
-                box-shadow: 0 0 10px #0074d9;
-            }
-            .donebtn-green {
-                background: linear-gradient(90deg,#00b84c,#009e2b);
-                color: #fff;
-                box-shadow: 0 0 10px #009e2b;
-            }
-            .donebtn-red {
-                background: linear-gradient(90deg,#c40000,#ff3c00);
-                color: #fff;
-                box-shadow: 0 0 10px #c40000;
-            }
-            </style>
-            <button id="nextpos" style="margin-bottom:12px;background:linear-gradient(90deg,#222,#444);color:#fff;box-shadow:0 0 10px #222;font-size:1.3em;padding:13px 22px 13px 22px;border-radius:18px;border:none;display:flex;align-items:center;justify-content:center;transition:background 0.2s;">➡</button>
-        </div>
+    <div id="timer-div" style="display:none;"></div>
+    <div class="btn-row">
+        <button id="race10btn" style="margin-bottom:12px;background:linear-gradient(90deg,#ff3c00,#c40000);color:#fff;box-shadow:0 0 10px #c40000;font-size:1.05em;padding:8px 18px;border-radius:10px;border:none;letter-spacing:1px;font-family:'Segoe UI',Arial,sans-serif;font-weight:bold;transition:background 0.2s;">🏁 Corsa ai 10</button>
+        <button id="donebtn" class="donebtn-blue" style="margin-bottom:12px;font-size:1.25em;padding:13px 30px;border-radius:18px;border:none;letter-spacing:1px;font-family:'Segoe UI',Arial,sans-serif;font-weight:bold;transition:background 0.2s;">Fatto</button>
+        <button id="capture-btn" style="margin-bottom:12px;font-size:1.1em;padding:13px 18px;border-radius:18px;border:none;background:linear-gradient(90deg,#ffe066,#ffd700);color:#222;font-weight:bold;min-width:44px;display:none;cursor:default;">0</button>
+        <button id="error-btn" style="margin-bottom:12px;font-size:1.1em;padding:13px 18px;border-radius:18px;border:none;background:linear-gradient(90deg,#ff6666,#ff2222);color:#fff;font-weight:bold;min-width:44px;display:none;cursor:default;">0</button>
+        <button id="endbtn" style="margin-bottom:12px;font-size:1.1em;padding:13px 22px;border-radius:18px;border:none;background:linear-gradient(90deg,#222,#444);color:#fff;font-weight:bold;display:none;">Fine</button>
+        <style>
+        .donebtn-blue {
+            background: linear-gradient(90deg,#0074d9,#005fa3);
+            color: #fff;
+            box-shadow: 0 0 10px #0074d9;
+        }
+        .donebtn-green {
+            background: linear-gradient(90deg,#00b84c,#009e2b);
+            color: #fff;
+            box-shadow: 0 0 10px #009e2b;
+        }
+        .donebtn-red {
+            background: linear-gradient(90deg,#c40000,#ff3c00);
+            color: #fff;
+            box-shadow: 0 0 10px #c40000;
+        }
+        </style>
+        <button id="nextpos" style="margin-bottom:12px;background:linear-gradient(90deg,#222,#444);color:#fff;box-shadow:0 0 10px #222;font-size:1.3em;padding:13px 22px 13px 22px;border-radius:18px;border:none;display:flex;align-items:center;justify-content:center;transition:background 0.2s;">➡</button>
+    </div>
     <div id="board" style="margin-top:16px;"></div>
 
     <script src="{{ url_for('static', filename='board.js') }}"></script>

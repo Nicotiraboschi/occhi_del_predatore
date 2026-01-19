@@ -100,7 +100,6 @@ async function loadBoard() {
                 if (elem && elem.classList.contains('square')) {
                     const toSq = elem.id;
                     if (dragOrigin && toSq && dragOrigin !== toSq) {
-                        // Esegui la mossa e aggiorna subito la scacchiera (freccia immediata)
                         fetch('/move', {
                             method: 'POST',
                             headers: {'Content-Type': 'application/json'},
@@ -113,7 +112,7 @@ async function loadBoard() {
                                 totalCaptures++;
                                 aggiornaCaptureCounter();
                             }
-                            loadBoard();
+                            loadBoard(); // Aggiorna subito la board
                         });
                     }
                 }
@@ -146,7 +145,7 @@ async function loadBoard() {
                                     totalCaptures++;
                                     aggiornaCaptureCounter();
                                 }
-                                loadBoard();
+                                loadBoard(); // Aggiorna subito la board
                             });
                         }
                     }
@@ -314,18 +313,21 @@ function aggiornaTimer() {
     const min = Math.floor(elapsed / 60);
     const sec = elapsed % 60;
     let timerDiv = document.getElementById('timer-div');
-    // Seleziona il contenitore bottoni (primo div figlio diretto del body)
-    let btnContainer = document.querySelector('body > div');
     if (!timerDiv) {
         timerDiv = document.createElement('div');
         timerDiv.id = 'timer-div';
         timerDiv.style.fontSize = '1.1em';
         timerDiv.style.fontWeight = 'bold';
-        timerDiv.style.marginRight = '12px';
         timerDiv.style.color = '#fff';
         timerDiv.style.textAlign = 'center';
-        if (btnContainer) btnContainer.prepend(timerDiv);
+        timerDiv.style.marginBottom = '8px';
+        // Inserisci sopra la barra bottoni
+        const btnRow = document.querySelector('.btn-row');
+        if (btnRow && btnRow.parentNode) {
+            btnRow.parentNode.insertBefore(timerDiv, btnRow);
+        }
     }
+    timerDiv.style.display = '';
     timerDiv.innerText = `Esercizio ${eserciziRisolti+1} di ${NUM_ESERCIZI} | Tempo: ${min}:${sec.toString().padStart(2,'0')}`;
     aggiornaCaptureCounter();
 }
@@ -377,10 +379,10 @@ function aggiornaCaptureCounter() {
             errorBtn.style.display = 'none';
         }
     }
-    // Mostra/nascondi il bottone "Fine"
+    // Mostra il bottone "Fine" durante la challenge, nascondilo solo quando la challenge è terminata
     const endBtn = document.getElementById('endbtn');
     if (endBtn) {
-        if (raceMode && eserciziRisolti >= NUM_ESERCIZI) {
+        if (raceMode && eserciziRisolti < NUM_ESERCIZI) {
             endBtn.style.display = '';
         } else {
             endBtn.style.display = 'none';
@@ -412,7 +414,7 @@ function resettaSessione() {
     if (endBtn) endBtn.style.display = 'none';
 }
 
-
+// In selectSquare e drag&drop, dopo una mossa:
 document.addEventListener('DOMContentLoaded', () => {
     loadBoard();
 
