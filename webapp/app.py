@@ -62,12 +62,20 @@ def index():
     session['fen'] = board.fen()
     # Trova tutte le catture legali per entrambi i colori
     all_captures = []
+    promo_captures = set()
     for color in [chess.WHITE, chess.BLACK]:
         board_turn = chess.Board(board.fen())
         board_turn.turn = color
         for move in board_turn.legal_moves:
             if board_turn.is_capture(move):
-                all_captures.append([chess.square_name(move.from_square), chess.square_name(move.to_square), 'w' if color else 'b'])
+                # Se è una promozione, conta solo una cattura per quel pedone
+                if move.promotion:
+                    key = (chess.square_name(move.from_square), chess.square_name(move.to_square), 'w' if color else 'b')
+                    if key not in promo_captures:
+                        all_captures.append([chess.square_name(move.from_square), chess.square_name(move.to_square), 'w' if color else 'b'])
+                        promo_captures.add(key)
+                else:
+                    all_captures.append([chess.square_name(move.from_square), chess.square_name(move.to_square), 'w' if color else 'b'])
     session['all_captures'] = all_captures
     # Step: prima bianco, poi nero
     session['step_color'] = 'w' if board.turn else 'b'

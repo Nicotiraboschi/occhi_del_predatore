@@ -61,6 +61,8 @@ async function loadBoard() {
             div.addEventListener('touchstart', (e) => {
                 if (!data.pieces[sq]) return;
                 e.preventDefault();
+                // Rimuovi eventuali immagini flottanti residue
+                document.querySelectorAll('img[style*="position: fixed"]').forEach(img => img.remove());
                 dragPiece = data.pieces[sq];
                 dragOrigin = sq;
                 dragImg = document.createElement('img');
@@ -85,8 +87,12 @@ async function loadBoard() {
 
             function moveDragTouch(e) {
                 if (dragImg && e.touches && e.touches[0]) {
-                    dragImg.style.left = (e.touches[0].clientX - 30) + 'px';
-                    dragImg.style.top = (e.touches[0].clientY - 30) + 'px';
+                    const x = e.touches[0].clientX - 30;
+                    const y = e.touches[0].clientY - 30;
+                    window.requestAnimationFrame(() => {
+                        dragImg.style.left = x + 'px';
+                        dragImg.style.top = y + 'px';
+                    });
                 }
             }
 
@@ -453,7 +459,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(res => res.json())
             .then(data => {
                 // Feedback bottone
-                if (data.banner && data.banner.startsWith('Bravo!')) {
+                if (data.banner && (data.banner.startsWith('Bravo!') || data.banner.startsWith('Il colore attuale'))) {
                     doneBtn.classList.remove('donebtn-blue', 'donebtn-red');
                     doneBtn.classList.add('donebtn-green');
                     doneBtn.innerHTML = '✔';
