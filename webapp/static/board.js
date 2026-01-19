@@ -1,5 +1,7 @@
 let selected = null;
 let foundCaptures = [];
+let totalCaptures = 0; // Counter globale delle catture trovate in corsa ai 10
+let totalErrors = 0;   // Counter globale degli errori su 'Fatto' in corsa ai 10
 
 async function loadBoard() {
     const res = await fetch('/get_board');
@@ -29,6 +31,71 @@ async function loadBoard() {
             const div = document.createElement('div');
             div.className = 'square ' + color;
             div.id = sq;
+
+
+
+            // --- DRAG & DROP VISIVO ---
+            let dragPiece = null;
+            let dragOrigin = null;
+            let dragImg = null;
+
+            div.addEventListener('mousedown', (e) => {
+                e.preventDefault(); // Previene selezione testo/caselle
+                if (!data.pieces[sq]) return;
+                dragPiece = data.pieces[sq];
+                dragOrigin = sq;
+                // Crea immagine flottante
+                dragImg = document.createElement('img');
+                dragImg.src = `/static/pieces/${dragPiece}.png`;
+                dragImg.style.position = 'fixed';
+                dragImg.style.pointerEvents = 'none';
+                dragImg.style.zIndex = 9999;
+                dragImg.style.width = '60px';
+                dragImg.style.height = '60px';
+                document.body.appendChild(dragImg);
+                moveDragImg(e);
+                document.addEventListener('mousemove', moveDragImg);
+                document.addEventListener('mouseup', endDrag);
+            });
+
+            function moveDragImg(e) {
+                if (dragImg) {
+                    dragImg.style.left = (e.clientX - 30) + 'px';
+                    dragImg.style.top = (e.clientY - 30) + 'px';
+                }
+            }
+
+            function endDrag(e) {
+                if (!dragImg) return;
+                dragImg.remove();
+                document.removeEventListener('mousemove', moveDragImg);
+                document.removeEventListener('mouseup', endDrag);
+                // Trova la casella sotto il mouse
+                const elem = document.elementFromPoint(e.clientX, e.clientY);
+                if (elem && elem.classList.contains('square')) {
+                    const toSq = elem.id;
+                    if (dragOrigin && toSq && dragOrigin !== toSq) {
+                        // Esegui la mossa e aggiorna subito la scacchiera (freccia immediata)
+                        fetch('/move', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({from: dragOrigin, to: toSq})
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            selected = null;
+                            if (raceMode && data.success) {
+                                totalCaptures++;
+                                aggiornaCaptureCounter();
+                            }
+                            loadBoard();
+                        });
+                    }
+                }
+                dragPiece = null;
+                dragOrigin = null;
+                dragImg = null;
+            }
 
             const handleSelect = (ev) => {
                 ev.preventDefault();
@@ -65,6 +132,7 @@ async function loadBoard() {
             drawArrow(from, to, color);
         });
     }
+    aggiornaCaptureCounter();
 }
 
 function selectSquare(sq) {
@@ -87,14 +155,10 @@ function selectSquare(sq) {
         .then(res => res.json())
         .then(data => {
             selected = null;
-            if (data.success) {
-                showPopup("");
-            } else {
-                if (data.banner) {
-                    showPopup(data.banner);
-                } else {
-                    showPopup('Non è una cattura!');
-                }
+            // Se la mossa è una cattura valida, incrementa il counter
+            if (raceMode && data.success) {
+                totalCaptures++;
+                aggiornaCaptureCounter();
             }
             loadBoard();
         });
@@ -182,52 +246,240 @@ function drawArrow(from, to, color) {
     head.setAttribute('filter', 'drop-shadow(0 0 8px #222)');
     svg.appendChild(head);
 }
+let timerInterval = null;
+let eserciziRisolti = 0;
+const NUM_ESERCIZI = 10;
+let raceMode = false;
 
-function showPopup(msg) {
-    const bravoDiv = document.getElementById('bravo-msg');
-    if (msg) {
-        bravoDiv.innerText = msg;
-        bravoDiv.classList.remove('hidden');
-    } else {
-        bravoDiv.innerText = '';
-        bravoDiv.classList.add('hidden');
+function aggiornaTimer() {
+    if (!timerStart && !document.getElementById('timer-div')) return;
+    const now = Date.now();
+    const elapsed = timerStart ? Math.floor((now - timerStart) / 1000) : 0;
+    const min = Math.floor(elapsed / 60);
+    const sec = elapsed % 60;
+    let timerDiv = document.getElementById('timer-div');
+    // Seleziona il contenitore bottoni (primo div figlio diretto del body)
+    let btnContainer = document.querySelector('body > div');
+    if (!timerDiv) {
+        timerDiv = document.createElement('div');
+        timerDiv.id = 'timer-div';
+        timerDiv.style.fontSize = '1.1em';
+        timerDiv.style.fontWeight = 'bold';
+        timerDiv.style.marginRight = '12px';
+        timerDiv.style.color = '#fff';
+        timerDiv.style.textAlign = 'center';
+        if (btnContainer) btnContainer.prepend(timerDiv);
+    }
+    timerDiv.innerText = `Esercizio ${eserciziRisolti+1} di ${NUM_ESERCIZI} | Tempo: ${min}:${sec.toString().padStart(2,'0')}`;
+    aggiornaCaptureCounter();
+}
+
+function mostraTempoTotale(elapsed) {
+    let timerDiv = document.getElementById('timer-div');
+    if (!timerDiv) return;
+    const min = Math.floor(elapsed / 60);
+    const sec = elapsed % 60;
+    timerDiv.innerText = `Hai risolto ${NUM_ESERCIZI} esercizi in ${min} minuti e ${sec} secondi!`;
+    aggiornaCaptureCounter();
+    const endBtn = document.getElementById('endbtn');
+    if (endBtn) endBtn.style.display = '';
+}
+
+function aggiornaCaptureCounter() {
+    const captureBtn = document.getElementById('capture-btn');
+    const errorBtn = document.getElementById('error-btn');
+    if (captureBtn) {
+        if (raceMode) {
+            captureBtn.style.display = '';
+            captureBtn.innerText = totalCaptures;
+        } else {
+            captureBtn.style.display = 'none';
+        }
+    }
+    if (errorBtn) {
+        if (raceMode) {
+            errorBtn.style.display = '';
+            errorBtn.innerText = totalErrors;
+        } else {
+            errorBtn.style.display = 'none';
+        }
+    }
+    // Mostra/nascondi il bottone "Fine"
+    const endBtn = document.getElementById('endbtn');
+    if (endBtn) {
+        if (raceMode && eserciziRisolti >= NUM_ESERCIZI) {
+            endBtn.style.display = '';
+        } else {
+            endBtn.style.display = 'none';
+        }
     }
 }
+
+function resettaSessione() {
+    eserciziRisolti = 0;
+    timerStart = null;
+    if (timerInterval) clearInterval(timerInterval);
+    let timerDiv = document.getElementById('timer-div');
+    if (timerDiv) timerDiv.innerText = '';
+    totalCaptures = 0;
+    totalErrors = 0;
+    aggiornaCaptureCounter();
+    raceMode = false;
+    // Nascondi i bottoni numerici e "Fine"
+    const captureBtn = document.getElementById('capture-btn');
+    const errorBtn = document.getElementById('error-btn');
+    const endBtn = document.getElementById('endbtn');
+    if (captureBtn) captureBtn.style.display = 'none';
+    if (errorBtn) errorBtn.style.display = 'none';
+    if (endBtn) endBtn.style.display = 'none';
+}
+
 
 document.addEventListener('DOMContentLoaded', () => {
     loadBoard();
 
     const nextBtn = document.getElementById('nextpos');
     const doneBtn = document.getElementById('donebtn');
+    const raceBtn = document.getElementById('race10btn');
+    const endBtn = document.getElementById('endbtn');
+
+    // Modalità "Corsa ai 10"
+    raceBtn.addEventListener('click', (ev) => {
+        ev.preventDefault();
+        resettaSessione();
+        raceMode = true;
+        eserciziRisolti = 0;
+        timerStart = Date.now();
+        aggiornaTimer();
+        timerInterval = setInterval(aggiornaTimer, 1000);
+        // Disabilita i bottoni inutili
+        nextBtn.style.display = 'none';
+        raceBtn.style.display = 'none';
+        doneBtn.style.display = '';
+        // Carica la prima posizione
+        fetch('/')
+            .then(() => {
+                loadBoard();
+            });
+    });
 
 
     // Gestione bottone "Fatto" con nuova route
+    // Stato per sapere se si è appena finito il primo colore
+    let justCompletedColor = false;
     const doneHandler = (ev) => {
         ev.preventDefault();
         fetch('/done', {method: 'POST'})
             .then(res => res.json())
             .then(data => {
-                showPopup(data.banner);
-                setTimeout(() => {
-                    showPopup("");
+                // Feedback bottone
+                if (data.banner && data.banner.startsWith('Bravo!')) {
+                    doneBtn.classList.remove('donebtn-blue', 'donebtn-red');
+                    doneBtn.classList.add('donebtn-green');
+                    doneBtn.innerHTML = '✔';
+                } else if (data.banner && data.banner.startsWith('Ti sei perso')) {
+                    doneBtn.classList.remove('donebtn-blue', 'donebtn-green');
+                    doneBtn.classList.add('donebtn-red');
+                    doneBtn.innerHTML = '✗';
+                    if (raceMode) {
+                        totalErrors++;
+                        aggiornaCaptureCounter();
+                    }
+                } else {
+                    doneBtn.classList.remove('donebtn-green', 'donebtn-red');
+                    doneBtn.classList.add('donebtn-blue');
+                    doneBtn.innerHTML = 'Fatto';
+                }
+                // Se il backend restituisce arrows (quando si cambia colore), aggiorna subito la board per togliere le frecce
+                if (data.arrows !== undefined) {
                     loadBoard();
-                }, 1800);
+                }
+                // Se la posizione è completata (entrambi i colori), cambia posizione subito
+                if (data.step_completed) {
+                    setTimeout(() => {
+                        doneBtn.classList.remove('donebtn-green', 'donebtn-red');
+                        doneBtn.classList.add('donebtn-blue');
+                        doneBtn.innerHTML = 'Fatto';
+                        if (raceMode) {
+                            eserciziRisolti++;
+                            if (eserciziRisolti >= NUM_ESERCIZI) {
+                                if (timerInterval) clearInterval(timerInterval);
+                                const elapsed = Math.floor((Date.now() - timerStart) / 1000);
+                                mostraTempoTotale(elapsed);
+                                doneBtn.style.display = 'none';
+                                raceBtn.style.display = '';
+                                nextBtn.style.display = '';
+                                return;
+                            }
+                        }
+                        aggiornaTimer();
+                        fetch('/')
+                            .then(() => {
+                                loadBoard();
+                            });
+                        selected = null;
+                    }, 1200);
+                } else {
+                    setTimeout(() => {
+                        if (!doneBtn.classList.contains('donebtn-blue')) {
+                            doneBtn.classList.remove('donebtn-green', 'donebtn-red');
+                            doneBtn.classList.add('donebtn-blue');
+                            doneBtn.innerHTML = 'Fatto';
+                        }
+                        aggiornaTimer();
+                        selected = null;
+                    }, 1200);
+                }
+            })
+            .catch(() => {
+                doneBtn.classList.remove('donebtn-green', 'donebtn-blue');
+                doneBtn.classList.add('donebtn-red');
+                doneBtn.innerHTML = '✗';
+                setTimeout(() => {
+                    doneBtn.classList.remove('donebtn-red');
+                    doneBtn.classList.add('donebtn-blue');
+                    doneBtn.innerHTML = 'Fatto';
+                }, 1200);
             });
     };
-    doneBtn.addEventListener('click', doneHandler);
-    doneBtn.addEventListener('touchstart', doneHandler, { passive: false });
+    // Assicura che i pulsanti siano sempre collegati
+    if (doneBtn) {
+        doneBtn.onclick = doneHandler;
+        doneBtn.ontouchstart = (ev) => { doneHandler(ev); return false; };
+    }
 
-    // Gestione bottone "Prossima posizione"
+    // Gestione bottone "Prossima posizione" (disabilitato in corsa ai 10)
     const handler = (ev) => {
         ev.preventDefault();
+        if (raceMode) return; // Ignora in modalità corsa
         fetch('/')
             .then(() => {
-                showPopup("");
+                // Nessun popup, solo feedback su bottone
                 loadBoard();
+                aggiornaTimer();
             });
         selected = null;
     };
 
-    nextBtn.addEventListener('click', handler);
-    nextBtn.addEventListener('touchstart', handler, { passive: false });
+    if (nextBtn) {
+        nextBtn.onclick = handler;
+        nextBtn.ontouchstart = (ev) => { handler(ev); return false; };
+    }
+
+    // Gestione bottone "Fine" (nuova logica)
+    if (endBtn) {
+        endBtn.onclick = () => {
+            resettaSessione();
+            // Mostra i bottoni principali
+            nextBtn.style.display = '';
+            raceBtn.style.display = '';
+            doneBtn.style.display = '';
+            aggiornaCaptureCounter();
+        };
+    }
+
+    // All'avvio, mostra tutti i bottoni
+    nextBtn.style.display = '';
+    raceBtn.style.display = '';
+    doneBtn.style.display = '';
 });
