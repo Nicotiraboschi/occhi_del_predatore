@@ -331,14 +331,31 @@ function aggiornaTimer() {
 }
 
 function mostraTempoTotale(elapsed) {
-    let timerDiv = document.getElementById('timer-div');
-    if (!timerDiv) return;
+    // Crea o aggiorna il div del messaggio di fine
+    let fineDiv = document.getElementById('fine-msg');
+    if (!fineDiv) {
+        fineDiv = document.createElement('div');
+        fineDiv.id = 'fine-msg';
+        fineDiv.style.fontSize = '1.15em';
+        fineDiv.style.fontWeight = 'bold';
+        fineDiv.style.color = '#ffe066';
+        fineDiv.style.textAlign = 'center';
+        fineDiv.style.margin = '18px 0 8px 0';
+        // Inserisci sopra la barra bottoni
+        const btnContainer = document.querySelector('body > div');
+        if (btnContainer && btnContainer.parentNode) {
+            btnContainer.parentNode.insertBefore(fineDiv, btnContainer);
+        }
+    }
     const min = Math.floor(elapsed / 60);
     const sec = elapsed % 60;
-    timerDiv.innerText = `Hai risolto ${NUM_ESERCIZI} esercizi in ${min} minuti e ${sec} secondi!`;
-    aggiornaCaptureCounter();
+    fineDiv.innerText = `Hai risolto ${NUM_ESERCIZI} esercizi in ${min} minuti e ${sec} secondi!`;
+    // Nascondi timer e bottone "Fine"
+    let timerDiv = document.getElementById('timer-div');
+    if (timerDiv) timerDiv.style.display = 'none';
     const endBtn = document.getElementById('endbtn');
-    if (endBtn) endBtn.style.display = '';
+    if (endBtn) endBtn.style.display = 'none';
+    aggiornaCaptureCounter();
 }
 
 function aggiornaCaptureCounter() {
@@ -376,7 +393,12 @@ function resettaSessione() {
     timerStart = null;
     if (timerInterval) clearInterval(timerInterval);
     let timerDiv = document.getElementById('timer-div');
-    if (timerDiv) timerDiv.innerText = '';
+    if (timerDiv) {
+        timerDiv.innerText = '';
+        timerDiv.style.display = '';
+    }
+    let fineDiv = document.getElementById('fine-msg');
+    if (fineDiv && fineDiv.parentNode) fineDiv.parentNode.removeChild(fineDiv);
     totalCaptures = 0;
     totalErrors = 0;
     aggiornaCaptureCounter();
