@@ -263,7 +263,7 @@ function drawArrow(from, to, color) {
         boardDiv.appendChild(svg);
     }
 
-    // Freccia curva con punta arrotondata e ombra
+    // Freccia curva semplificata per performance mobile
     const dx = x2 - x1;
     const dy = y2 - y1;
     const len = Math.sqrt(dx*dx + dy*dy);
@@ -271,8 +271,8 @@ function drawArrow(from, to, color) {
     const normY = dy / len;
 
     // Punto di controllo per la curva
-    const ctrlX = (x1 + x2) / 2 + normY * 40;
-    const ctrlY = (y1 + y2) / 2 - normX * 40;
+    const ctrlX = (x1 + x2) / 2 + normY * 32;
+    const ctrlY = (y1 + y2) / 2 - normX * 32;
 
     const arrowPath = `M${x1},${y1} Q${ctrlX},${ctrlY} ${x2},${y2}`;
 
@@ -282,23 +282,23 @@ function drawArrow(from, to, color) {
     if (color === 'w') arrowColor = 'rgb(255,255,255)';
     if (color === 'b') arrowColor = 'rgb(130,0,0)';
     path.setAttribute('stroke', arrowColor);
-    path.setAttribute('stroke-width', '7');
-    path.setAttribute('opacity', '0.98');
+    path.setAttribute('stroke-width', '5');
+    path.setAttribute('opacity', '0.95');
     path.setAttribute('fill', 'none');
     path.setAttribute('stroke-linecap', 'round');
     path.setAttribute('stroke-linejoin', 'round');
-    path.setAttribute('filter', 'drop-shadow(0 0 12px #222)');
+    // Niente filter per performance
     svg.appendChild(path);
 
-    // Punta arrotondata
+    // Punta arrotondata semplificata
     const head = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     head.setAttribute('cx', x2);
     head.setAttribute('cy', y2);
-    head.setAttribute('r', '7');
+    head.setAttribute('r', '5');
     head.setAttribute('fill', arrowColor);
     head.setAttribute('stroke', '#222');
-    head.setAttribute('stroke-width', '2.5');
-    head.setAttribute('filter', 'drop-shadow(0 0 8px #222)');
+    head.setAttribute('stroke-width', '1.5');
+    // Niente filter per performance
     svg.appendChild(head);
 }
 let timerInterval = null;
