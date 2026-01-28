@@ -438,8 +438,8 @@ document.addEventListener('DOMContentLoaded', () => {
         timerStart = Date.now();
         aggiornaTimer();
         timerInterval = setInterval(aggiornaTimer, 1000);
-        // Disabilita i bottoni inutili
-        nextBtn.style.display = 'none';
+        // Mostra tutti i bottoni
+        nextBtn.style.display = '';
         raceBtn.style.display = 'none';
         doneBtn.style.display = '';
         // Carica la prima posizione
@@ -534,15 +534,28 @@ document.addEventListener('DOMContentLoaded', () => {
         doneBtn.ontouchstart = (ev) => { doneHandler(ev); return false; };
     }
 
-    // Gestione bottone "Prossima posizione" (disabilitato in corsa ai 10)
+    // Gestione bottone "Prossima posizione" (ora abilitato anche in corsa ai 10)
     const handler = (ev) => {
         ev.preventDefault();
-        if (raceMode) return; // Ignora in modalità corsa
+        if (raceMode) {
+            eserciziRisolti++;
+            aggiornaTimer();
+            aggiornaCaptureCounter();
+            if (eserciziRisolti >= NUM_ESERCIZI) {
+                if (timerInterval) clearInterval(timerInterval);
+                const elapsed = Math.floor((Date.now() - timerStart) / 1000);
+                mostraTempoTotale(elapsed);
+                doneBtn.style.display = 'none';
+                raceBtn.style.display = '';
+                nextBtn.style.display = '';
+                return;
+            }
+        }
         fetch('/')
             .then(() => {
-                // Nessun popup, solo feedback su bottone
                 loadBoard();
                 aggiornaTimer();
+                aggiornaCaptureCounter();
             });
         selected = null;
     };
