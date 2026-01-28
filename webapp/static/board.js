@@ -364,6 +364,48 @@ function mostraTempoTotale(elapsed) {
     const endBtn = document.getElementById('endbtn');
     if (endBtn) endBtn.style.display = 'none';
     aggiornaCaptureCounter();
+    
+        // Bottone blu media per cattura
+        // Rimuovi eventuali duplicati fuori da .btn-row
+        let oldBtns = document.querySelectorAll('#pos-btn');
+        oldBtns.forEach(btn => {
+            if (btn.parentNode && !btn.closest('.btn-row')) btn.remove();
+        });
+        let posBtn = document.getElementById('pos-btn');
+        if (!posBtn || !posBtn.closest('.btn-row')) {
+            if (posBtn) posBtn.remove();
+            posBtn = document.createElement('button');
+            posBtn.id = 'pos-btn';
+            posBtn.style.margin = '0 0 0 8px';
+            posBtn.style.display = 'inline-block';
+            posBtn.style.fontSize = '1.1em';
+            posBtn.style.padding = '13px 18px';
+            posBtn.style.borderRadius = '18px';
+            posBtn.style.border = 'none';
+            posBtn.style.background = 'linear-gradient(90deg,#66e0ff,#0099cc)';
+            posBtn.style.color = '#fff';
+            posBtn.style.fontWeight = 'bold';
+            posBtn.style.boxShadow = '0 0 10px #0099cc';
+            posBtn.style.minWidth = '44px';
+            posBtn.style.cursor = 'default';
+            // Inserisci nella .btn-row accanto a errorBtn
+            const btnRow = document.querySelector('.btn-row');
+            const errorBtn = document.getElementById('error-btn');
+            if (btnRow && errorBtn) {
+                btnRow.insertBefore(posBtn, errorBtn.nextSibling);
+            } else if (btnRow) {
+                btnRow.appendChild(posBtn);
+            }
+        }
+        let catture = typeof totalCaptures === 'number' ? totalCaptures : 0;
+        if (catture > 0) {
+            let mediaCat = Math.round(elapsed / catture);
+            posBtn.innerText = `${mediaCat}s\\c`;
+            posBtn.style.display = 'inline-block';
+        } else {
+            posBtn.style.display = 'none';
+        }
+        posBtn.disabled = true;
 }
 
 function aggiornaCaptureCounter() {
@@ -384,6 +426,44 @@ function aggiornaCaptureCounter() {
         } else {
             errorBtn.style.display = 'none';
         }
+    }
+    // Bottone blu media per posizione (solo in corsa ai 10)
+    let posBtn = document.getElementById('pos-btn');
+    if (!posBtn) {
+        posBtn = document.createElement('button');
+        posBtn.id = 'pos-btn';
+        posBtn.style.margin = '0 0 0 8px';
+        posBtn.style.display = 'inline-block';
+        posBtn.style.fontSize = '1.1em';
+        posBtn.style.padding = '13px 18px';
+        posBtn.style.borderRadius = '18px';
+        posBtn.style.border = 'none';
+        posBtn.style.background = 'linear-gradient(90deg,#66e0ff,#0099cc)';
+        posBtn.style.color = '#fff';
+        posBtn.style.fontWeight = 'bold';
+        posBtn.style.boxShadow = '0 0 10px #0099cc';
+        posBtn.style.minWidth = '44px';
+        posBtn.style.cursor = 'default';
+        // Inserisci subito dopo il bottone errori
+        const errorBtn = document.getElementById('error-btn');
+        if (errorBtn && errorBtn.parentNode) {
+            errorBtn.parentNode.insertBefore(posBtn, errorBtn.nextSibling);
+        }
+    }
+    // Mostra solo alla fine della corsa ai 10
+    if (raceMode && eserciziRisolti >= NUM_ESERCIZI) {
+        let elapsed = 0;
+        if (window.timerStart) {
+            elapsed = Math.floor((Date.now() - window.timerStart) / 1000);
+        }
+        // Numero di catture totali (dal quadrato giallo)
+        let catture = parseInt(document.getElementById('capture-counter')?.innerText || '1', 10);
+        if (isNaN(catture) || catture < 1) catture = 1;
+        let mediaCat = (elapsed / catture).toFixed(0);
+        posBtn.innerText = `${mediaCat}s\\c`;
+        posBtn.style.display = '';
+    } else {
+        posBtn.style.display = 'none';
     }
     // Mostra il bottone "Fine" durante la challenge, nascondilo solo quando la challenge è terminata
     const endBtn = document.getElementById('endbtn');

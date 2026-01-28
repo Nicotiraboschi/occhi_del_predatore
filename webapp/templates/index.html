@@ -173,10 +173,22 @@
             .btn-row {
                 display: flex;
                 flex-direction: row;
-                gap: 8px;
+                gap: 4px;
                 align-items: center;
-                justify-content: center;
+                justify-content: flex-start;
                 margin-bottom: 8px;
+                flex-wrap: nowrap;
+                width: 100vw;
+                max-width: 100vw;
+                overflow-x: auto;
+                white-space: nowrap;
+                padding-left: 4px;
+                padding-right: 4px;
+            }
+            .btn-row button {
+                font-size: 0.95em !important;
+                padding: 8px 10px !important;
+                margin-bottom: 8px !important;
             }
 
             #timer-div {
